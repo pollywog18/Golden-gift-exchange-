@@ -1,63 +1,351 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Golden Secret Santa — Private Codes</title>
-<style>
-:root{--gold:#d8b66a;--pale:#f2dfad;--muted:#aaa08c;--line:#46391f}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#2b2418 0,#101010 48%,#080808 100%);color:#f7f1e5;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
-main{max-width:720px;margin:auto;padding:24px 16px 52px}.hero{text-align:center;margin:10px 0 24px}.stars{color:var(--gold);letter-spacing:10px;font-size:25px}.eyebrow{color:var(--gold);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:700}.hero h1{font:clamp(38px,8vw,58px)/1.04 Georgia,serif;color:var(--pale);font-weight:500;margin:12px 0}.hero p,.muted{color:var(--muted);font-size:14px}.card{background:linear-gradient(145deg,#1d1b17,#111);border:1px solid var(--line);border-radius:18px;padding:21px;margin:15px 0;box-shadow:0 16px 42px #0007}.card h2{font:26px Georgia,serif;color:var(--pale);margin:0 0 12px}.pill{display:inline-block;border:1px solid var(--line);border-radius:30px;padding:4px 10px;color:var(--pale);font-size:11px;letter-spacing:1px}label{display:block;color:#e8d9b7;font-size:13px;margin:13px 0 6px}input,textarea{width:100%;border:1px solid #51452d;border-radius:10px;background:#0b0b0b;color:white;padding:13px;font:inherit}textarea{min-height:120px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{border:0;border-radius:30px;background:linear-gradient(100deg,#b48b3d,#f0d99b);color:#17120a;font-weight:800;padding:14px 18px;width:100%;margin-top:15px;cursor:pointer}.btn.outline{background:transparent;color:var(--pale);border:1px solid var(--gold)}.btn:disabled{opacity:.45;cursor:not-allowed}.notice{border-left:3px solid var(--gold);padding:11px 13px;background:#d8b66a12;color:#d8ccb0;font-size:13px;border-radius:4px;margin-top:13px}.warning{border-color:#b66c48;background:#9d472015}.rule{display:flex;gap:10px;align-items:flex-start;margin:10px 0;color:#ded4bf;font-size:14px}.divider{height:1px;background:var(--line);margin:18px 0}.footer{text-align:center;color:#756d5d;font-size:12px;margin-top:25px}.hidden{display:none!important}.code{font:700 25px/1.3 ui-monospace,monospace;letter-spacing:4px;color:var(--pale);text-align:center;padding:15px;border:1px dashed var(--gold);border-radius:12px;margin-top:12px}@media(max-width:520px){.grid{grid-template-columns:1fr}.card{padding:18px}}
-</style></head>
-<body><main>
-<header class="hero"><div class="stars">✦ ✧ ✦</div><div class="eyebrow">A little holiday magic</div><h1>Golden<br>Secret Santa</h1><p>One organiser. One private draw. A personal code for every participant.</p></header>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Golden Gift Exchange</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<section class="card">
-<span class="pill">HOW PRIVATE CODES WORK</span><h2>One device is enough</h2>
-<div class="rule">✦ <span>Every participant gets their own unique, private access code.</span></div>
-<div class="rule">✦ <span>Family members can take turns on the same phone, tablet or computer.</span></div>
-<div class="rule">✦ <span>Each code reveals only its owner's recipient—not anyone else's assignment.</span></div>
-<div class="rule">✦ <span>After viewing, tap <b>Hide my result</b> before handing over the device.</span></div>
-<div class="rule">✦ <span>Codes cannot start a new draw or change the locked assignments.</span></div>
-<div class="notice warning">For privacy, participants should enter their code out of sight of others, avoid saving screenshots, and hide the result before passing the device on.</div>
-</section>
+  <style>
+    * { box-sizing: border-box; }
 
-<section class="card">
-<span class="pill">PARTICIPANT ACCESS</span><h2>Enter your personal code</h2>
-<p class="muted">Use the unique code sent to you by the organiser. No personal account or separate device is needed.</p>
-<label for="code">Your private access code</label><input id="code" autocomplete="off" autocapitalize="characters" placeholder="e.g. K7P4-M9Q2">
-<button class="btn" onclick="reveal()">Reveal my recipient</button>
-<div id="msg" class="notice">Private code lookup becomes active when the secure backend is connected.</div>
-<div id="result" class="hidden"><div class="divider"></div><div class="eyebrow" style="text-align:center">You are buying a gift for</div><div class="code" id="recipient">PRIVATE RESULT</div><button class="btn outline" onclick="hideResult()">Hide my result</button><p class="muted" style="text-align:center">Please hide this result before handing the device to someone else.</p></div>
-</section>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #080808;
+      color: #f5d778;
+      font-family: Arial, sans-serif;
+      padding: 25px 15px;
+    }
 
-<section class="card">
-<span class="pill">ORGANISER ONLY</span><h2>Exchange setup</h2>
-<label for="event">Exchange name</label><input id="event" value="The Christmas Secret Santa">
-<div class="grid"><div><label for="budget">Gift budget</label><input id="budget" placeholder="e.g. TT$150"></div><div><label for="date">Exchange date</label><input id="date" type="date"></div></div>
-<label for="names">Participant names — one per line</label><textarea id="names" placeholder="Alex&#10;Jordan&#10;Taylor&#10;Morgan"></textarea>
-<button class="btn" onclick="checkList()">Check participant list</button>
-<div id="organiserMsg" class="notice">The secure organiser draw, code generation and permanent lock must be connected on the server before this can be used for a real exchange.</div>
-</section>
-<div class="footer">✦ KEEP IT SECRET. KEEP IT THOUGHTFUL. ✦<br>Golden Secret Santa · Private individual codes</div>
-</main>
+    .container {
+      max-width: 520px;
+      margin: 25px auto;
+      padding: 25px;
+      background: #151515;
+      border: 1px solid #b99135;
+      border-radius: 16px;
+      box-shadow: 0 0 25px #b9913525;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #e8c45d;
+    }
+
+    h1 { font-size: 27px; }
+
+    .subtitle {
+      text-align: center;
+      color: #c9c9c9;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 7px;
+      color: #e8c45d;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 13px;
+      background: #080808;
+      color: white;
+      border: 1px solid #806727;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 18px;
+      background: linear-gradient(135deg, #f4d77b, #b58a29);
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .secondary {
+      background: transparent;
+      color: #e8c45d;
+      border: 1px solid #b99135;
+    }
+
+    .section {
+      margin-top: 28px;
+      padding-top: 15px;
+      border-top: 1px solid #66501f;
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      color: white;
+      background: #242424;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .hidden { display: none; }
+
+    .pin-list {
+      color: white;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>✦ GOLDEN GIFT EXCHANGE ✦</h1>
+    <p class="subtitle">A little mystery. A lot of magic.</p>
+
+    <div id="organiserSection" class="section">
+      <h2>Organiser Login</h2>
+      <label>Email address</label>
+      <input type="email" id="organiserEmail" placeholder="Enter your email">
+
+      <button onclick="sendLoginLink()">Send Login Link</button>
+      <div id="loginMessage" class="message hidden"></div>
+    </div>
+
+    <div id="adminPanel" class="section hidden">
+      <h2>Organiser Dashboard</h2>
+
+      <label>Exchange title</label>
+      <input id="exchangeTitle" value="Golden Gift Exchange">
+
+      <label>Gift budget</label>
+      <input id="budget" placeholder="Example: $200">
+
+      <label>Exchange date</label>
+      <input type="date" id="exchangeDate">
+
+      <label>Participant names</label>
+      <textarea id="participants" placeholder="Enter one participant name per line"></textarea>
+
+      <button onclick="createDraw()">Create Gift Draw</button>
+
+      <div id="drawMessage" class="message hidden"></div>
+      <div id="pinResults" class="message hidden"></div>
+
+      <button class="secondary" onclick="logoutOrganiser()">Log Out</button>
+    </div>
+
+    <div class="section">
+      <h2>Participant Login</h2>
+      <p class="subtitle">Enter your name and private PIN to reveal your gift recipient.</p>
+
+      <label>Your name</label>
+      <input id="participantName" placeholder="Enter your name">
+
+      <label>Your private PIN</label>
+      <input id="participantPin" type="password" placeholder="Enter your PIN">
+
+      <button onclick="revealResult()">Reveal My Recipient</button>
+
+      <div id="participantMessage" class="message hidden"></div>
+      <div id="result" class="message hidden"></div>
+
+      <button id="hideResultButton" class="secondary hidden" onclick="hideResult()">
+        Hide My Result
+      </button>
+    </div>
+  </div>
 <script>
-function reveal(){
- const code=document.getElementById('code').value.trim();
- const m=document.getElementById('msg');
- document.getElementById('result').classList.add('hidden');
- if(!code){m.textContent='Please enter the private code sent to you.';return}
- m.textContent='The private code service is not connected yet. No assignment has been revealed.';
-}
-function hideResult(){
- document.getElementById('result').classList.add('hidden');
- document.getElementById('code').value='';
- document.getElementById('msg').textContent='Your result is hidden. The next participant can enter their own code.';
-}
-function checkList(){
- const names=document.getElementById('names').value.split('\n').map(n=>n.trim()).filter(Boolean);
- const m=document.getElementById('organiserMsg');
- if(names.length<3){m.textContent='Please add at least three participants.';return}
- if(new Set(names.map(n=>n.toLowerCase())).size!==names.length){m.textContent='Duplicate names found. Please correct the list.';return}
- m.textContent=names.length+' participants entered. No draw has been made. Secure server setup is still required.';
-}
-</script></body></html>
+  const SUPABASE_URL = "https://xcbgfyqlmcurxtivpfpy.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_4zsJ-qenQFoPmXAdNUUMKg_OgtfIvBs";
+
+  const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  const FUNCTION_NAME = "Secret-Santa";
+
+  function showMessage(id, message) {
+    const element = document.getElementById(id);
+    element.textContent = message;
+    element.classList.remove("hidden");
+  }
+
+  async function sendLoginLink() {
+    const email = document.getElementById("organiserEmail").value.trim();
+
+    if (!email) {
+      showMessage("loginMessage", "Please enter your email address.");
+      return;
+    }
+
+    const { error } = await supabaseClient.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.href
+      }
+    });
+
+    if (error) {
+      showMessage("loginMessage", error.message);
+      return;
+    }
+
+    showMessage("loginMessage", "Login link sent! Check your email.");
+  }
+
+  async function checkOrganiserLogin() {
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (data.session) {
+      document.getElementById("organiserSection").classList.add("hidden");
+      document.getElementById("adminPanel").classList.remove("hidden");
+    }
+  }
+
+  async function logoutOrganiser() {
+    await supabaseClient.auth.signOut();
+    document.getElementById("adminPanel").classList.add("hidden");
+    document.getElementById("organiserSection").classList.remove("hidden");
+    showMessage("loginMessage", "You have logged out.");
+  }
+
+  async function createDraw() {
+    const title = document.getElementById("exchangeTitle").value.trim();
+    const budget = document.getElementById("budget").value.trim();
+    const exchange_date =
+      document.getElementById("exchangeDate").value || null;
+
+    const participants = document.getElementById("participants").value
+      .split("\n")
+      .map(name => name.trim())
+      .filter(Boolean);
+
+    if (participants.length < 2) {
+      showMessage("drawMessage", "Please enter at least two participants.");
+      return;
+    }
+
+    if (!confirm("Are you sure? This gift draw can only be created once.")) {
+      return;
+    }
+
+    const { data: sessionData } = await supabaseClient.auth.getSession();
+
+    if (!sessionData.session) {
+      showMessage("drawMessage", "Please log in as organiser first.");
+      return;
+    }
+
+    showMessage("drawMessage", "Creating your gift draw...");
+
+    const { data, error } = await supabaseClient.functions.invoke(
+      FUNCTION_NAME,
+      {
+        body: {
+          action: "create_draw",
+          title,
+          budget,
+          exchange_date,
+          participants
+        }
+      }
+    );
+
+    if (error || data?.error) {
+      showMessage("drawMessage", data?.error || error.message);
+      return;
+    }
+
+    if (!data?.locked || !Array.isArray(data.codes)) {
+      showMessage("drawMessage", "Unexpected response. Please contact support.");
+      return;
+    }
+
+    document.getElementById("participants").disabled = true;
+    document.getElementById("pinResults").classList.remove("hidden");
+
+    document.getElementById("pinResults").textContent =
+      "DRAW CREATED — SAVE THESE PRIVATE PINS\n\n" +
+      data.codes.map(person => person.name + " : " + person.pin).join("\n") +
+      "\n\nGive each PIN privately to its participant. These PINs will not be shown again.";
+
+    showMessage("drawMessage", "Your draw is locked. No second draw is allowed.");
+  }
+
+  checkOrganiserLogin();
+  async function revealResult() {
+    const name = document.getElementById("participantName").value.trim();
+    const pin = document.getElementById("participantPin").value.trim();
+
+    if (!name || !pin) {
+      showMessage("participantMessage", "Enter your name and PIN.");
+      return;
+    }
+
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("hideResultButton").classList.add("hidden");
+
+    showMessage("participantMessage", "Checking your details...");
+
+    const { data, error } = await supabaseClient.functions.invoke(
+      FUNCTION_NAME,
+      {
+        body: {
+          action: "redeem",
+          name,
+          pin
+        }
+      }
+    );
+
+    if (error || data?.error) {
+      showMessage(
+        "participantMessage",
+        data?.error || error.message
+      );
+      return;
+    }
+
+    document.getElementById("participantMessage").classList.add("hidden");
+
+    showMessage(
+      "result",
+      "✦ YOUR GIFT RECIPIENT ✦\n\n" +
+      data.recipient +
+      "\n\nExchange: " + (data.title || "Golden Gift Exchange") +
+      "\nBudget: " + (data.budget || "Not specified") +
+      "\nDate: " + (data.exchange_date || "Not specified")
+    );
+
+    document.getElementById("hideResultButton").classList.remove("hidden");
+  }
+
+  function hideResult() {
+    document.getElementById("participantName").value = "";
+    document.getElementById("participantPin").value = "";
+    document.getElementById("result").classList.add("hidden");
+    document.getElementById("hideResultButton").classList.add("hidden");
+    document.getElementById("participantMessage").classList.add("hidden");
+  }
+</script>
+</body>
+</html>
+
+</script>
+</body>
+</html>
+
+</body>
+</html>
